@@ -46,6 +46,11 @@ constexpr uint8_t  LINE_SENSOR_RIGHT  = 11;
 constexpr uint8_t  COMPASS_SDA_PIN      = 8;
 constexpr uint8_t  COMPASS_SCL_PIN      = 9;
 
+constexpr uint8_t  COLOR_SENSOR_SDA_PIN = 8;
+constexpr uint8_t  COLOR_SENSOR_SCL_PIN = 9;
+constexpr uint8_t  COLOR_TCA9545A_ADDR   = 0x70;
+constexpr uint8_t  COLOR_TCS34725_ADDR   = 0x29;
+
 constexpr float HEADING_KP = 2.5f;
 constexpr float HEADING_KI = 0.01f;
 constexpr float HEADING_KD = 0.8f;
