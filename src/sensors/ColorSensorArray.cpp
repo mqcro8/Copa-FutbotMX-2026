@@ -119,7 +119,7 @@ ColorSensorData ColorSensorArray::update() {
     return _lastData;
 }
 
-ColorSensorData ColorSensorArray::getData() {
+ColorSensorData ColorSensorArray::getData() const {
     ColorSensorData copy = {};
     if (_mutex == nullptr) {
         return copy;

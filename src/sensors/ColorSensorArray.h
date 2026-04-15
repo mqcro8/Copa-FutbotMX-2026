@@ -30,7 +30,7 @@ public:
 
     bool init();
     ColorSensorData update();
-    ColorSensorData getData();  // Thread-safe read
+    ColorSensorData getData() const;  // Thread-safe read
 
     ColorReading readSensor(SensorPosition pos);
     bool isValid(SensorPosition pos) const;
@@ -43,7 +43,7 @@ private:
     std::array<Adafruit_TCS34725, NUM_SENSORS> _sensors;
     std::array<bool, NUM_SENSORS> _initialized;
     ColorSensorData _lastData;
-    SemaphoreHandle_t _mutex;
+    mutable SemaphoreHandle_t _mutex;
 };
 
 void colorSensorArray_init();
