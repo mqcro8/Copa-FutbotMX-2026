@@ -30,7 +30,8 @@ void loop() {
         ESP.restart();
     }
 
-    auto ball = irSensorArray_update();
+    irSensorArray_read();
+    auto ball = irSensorArray_analyze();
 
     LOG("IR", "Zone=%d Angle=%d Intensity=%d Detected=%d",
         (int)irSensorArray_getZone(), ball.angle_deg, ball.intensity, ball.detected);
