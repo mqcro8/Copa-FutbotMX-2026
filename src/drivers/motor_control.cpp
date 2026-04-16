@@ -102,15 +102,28 @@ void motorControl_setVelocity(float vx, float vy, float omega)
     }
 }
 
+void motorControl_setSpeed(MotorId motor, int16_t speed)
+{
+    uint8_t idx = static_cast<uint8_t>(motor);
+    if (idx >= 3) return;
+
+    float normalized = static_cast<float>(speed) / 255.0f;
+    motor_drive(kMotors[idx], normalized);
+}
+
 void motorControl_stop()
 {
     for (const auto& m : kMotors) {
         ledcWrite(m.pwmChannel, 0);
 
-        // Coast (or change to HIGH/HIGH for brake)
         digitalWrite(m.in1Pin, LOW);
         digitalWrite(m.in2Pin, LOW);
     }
+}
+
+void motorControl_stopAll()
+{
+    motorControl_stop();
 }
 
 void motorControl_update()

@@ -2,32 +2,21 @@
 #include "config/config.h"
 #include "core/state.h"
 #include "drivers/motor_control.h"
-#include "sensors/ball_tracker.h"
-#include "sensors/line_detector.h"
-#include "sensors/compass.h"
-#include "comms/comms.h"
-#include "behaviors/strategy.h"
+#include "drivers/algorithm_test.h"
 #include "debug_utils.h"
-
-static uint32_t lastHeartbeat = 0;
 
 void setup() {
     Serial.begin(115200);
-    LOG("MAIN", "Starting robot...");
+    LOG("MAIN", "Starting robot in test mode...");
 
     Core::init();
-    motorControl_init();
-    ballTracker_init();
-    lineDetector_init();
-    compass_init();
-    comms_init();
-    strategy_init();
+    algorithmTest_init();
 
-    LOG("MAIN", "Initialization complete");
+    LOG("MAIN", "Test initialization complete");
 }
 
 void safeShutdown() {
-    motorControl_stop();
+    motorControl_stopAll();
     LOG("MAIN", "Safe shutdown executed");
 }
 
@@ -40,23 +29,6 @@ void loop() {
         ESP.restart();
     }
 
-    uint32_t now = millis();
-
-    auto ball = ballTracker_update();
-    Core::ball_angle = ball.angle_deg;
-    Core::ball_confidence = ball.intensity;
-
-    Core::current_heading = compass_readHeading();
-
-    strategy_update();
-    Core::state = strategy_getState();
-
-    motorControl_update();
-
-    if (now - lastHeartbeat >= HEARTBEAT_INTERVAL_MS) {
-        comms_send();
-        lastHeartbeat = now;
-    }
-
+    algorithmTest_loop();
     Core::update();
 }

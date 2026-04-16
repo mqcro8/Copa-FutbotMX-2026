@@ -34,11 +34,15 @@ constexpr uint8_t  M2_IN2_PIN  = 18;
 constexpr uint8_t  M2_PWM_CH   = 2;
 
 // ─── TB6612FNG STBY pin ────────────────────────────────────────────────────────
-constexpr uint8_t  MOTOR_STBY_PIN = 7; // or 255 if tied HIGH
+constexpr uint8_t  MOTOR_STBY_PIN = 4; // or 255 if tied HIGH
 //
 constexpr uint8_t  KICKER_PIN           = 3;
 
-constexpr uint8_t  IR_SENSOR_COUNT      = 8;
+// ─── IR Sensors (VS1838B) ──────────────────────────────────────────────────
+constexpr uint8_t IR_SENSOR_COUNT    = 8;
+constexpr uint8_t IR_SENSOR_PINS[IR_SENSOR_COUNT] = { 19, 20, 21, 22, 23, 24, 25, 26 };
+
+// ─── Line Sensors ────────────────────────────────────────────────────────────
 
 constexpr uint8_t  LINE_SENSOR_LEFT   = 10;
 constexpr uint8_t  LINE_SENSOR_RIGHT  = 11;
