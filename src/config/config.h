@@ -36,7 +36,11 @@ constexpr uint8_t  MOTOR_STBY_PIN = 4; // or 255 if tied HIGH
 
 constexpr uint8_t  KICKER_PIN           = 3;
 
-constexpr uint8_t  IR_SENSOR_COUNT      = 8;
+// ─── IR Sensors (VS1838B) ──────────────────────────────────────────────────
+constexpr uint8_t IR_SENSOR_COUNT    = 8;
+constexpr uint8_t IR_SENSOR_PINS[IR_SENSOR_COUNT] = { 19, 20, 21, 22, 23, 24, 25, 26 };
+
+// ─── Line Sensors ────────────────────────────────────────────────────────────
 
 //
 constexpr uint8_t  LINE_SENSOR_LEFT   = 10;
@@ -53,6 +57,11 @@ constexpr uint8_t IR_FRONT_RIGHT_PIN   = 3;
 
 constexpr uint8_t  COMPASS_SDA_PIN      = 8;
 constexpr uint8_t  COMPASS_SCL_PIN      = 9;
+
+constexpr uint8_t  COLOR_SENSOR_SDA_PIN = 8;
+constexpr uint8_t  COLOR_SENSOR_SCL_PIN = 9;
+constexpr uint8_t  COLOR_TCA9545A_ADDR   = 0x70;
+constexpr uint8_t  COLOR_TCS34725_ADDR   = 0x29;
 
 constexpr float HEADING_KP = 2.5f;
 constexpr float HEADING_KI = 0.01f;
