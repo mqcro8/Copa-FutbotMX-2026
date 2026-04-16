@@ -31,15 +31,25 @@ constexpr uint8_t  M2_IN2_PIN  = 18;
 constexpr uint8_t  M2_PWM_CH   = 2;
 
 // ─── TB6612FNG STBY pin ────────────────────────────────────────────────────────
-constexpr uint8_t  MOTOR_STBY_PIN = 7; // or 255 if tied HIGH
+constexpr uint8_t  MOTOR_STBY_PIN = 4; // or 255 if tied HIGH
 //
 
 constexpr uint8_t  KICKER_PIN           = 3;
 
 constexpr uint8_t  IR_SENSOR_COUNT      = 8;
 
+//
 constexpr uint8_t  LINE_SENSOR_LEFT   = 10;
 constexpr uint8_t  LINE_SENSOR_RIGHT  = 11;
+
+// ── IR Ball Tracker Sensors (VS1838B — active LOW) ─────────────────────────────
+constexpr uint8_t IR_FRONT_LEFT_PIN   = 1;   // ← adjust to your actual GPIO
+constexpr uint8_t IR_FRONT_CENTER_PIN   = 2;
+constexpr uint8_t IR_FRONT_RIGHT_PIN   = 3;
+// Uncomment when adding peripheral sensors:
+// constexpr uint8_t IR_SIDE_LEFT_PIN   = 4
+// constexpr uint8_t IR_SIDE_RIGHT_PIN   = 5
+// constexpr uint8_t IR_REAR_PIN   = 6
 
 constexpr uint8_t  COMPASS_SDA_PIN      = 8;
 constexpr uint8_t  COMPASS_SCL_PIN      = 9;
