@@ -3,9 +3,6 @@
 
 constexpr uint8_t  KILL_PIN             = 0;
 //Motores
-#pragma once
-#include <cstdint>
-
 // ─── Robot geometry ────────────────────────────────────────────────────────────
 constexpr float    ROBOT_WHEEL_RADIUS   = 0.03f;
 constexpr float    ROBOT_BASE_RADIUS    = 0.10f;
@@ -36,6 +33,7 @@ constexpr uint8_t  M2_PWM_CH   = 2;
 // ─── TB6612FNG STBY pin ────────────────────────────────────────────────────────
 constexpr uint8_t  MOTOR_STBY_PIN = 4; // or 255 if tied HIGH
 //
+
 constexpr uint8_t  KICKER_PIN           = 3;
 
 // ─── IR Sensors (VS1838B) ──────────────────────────────────────────────────

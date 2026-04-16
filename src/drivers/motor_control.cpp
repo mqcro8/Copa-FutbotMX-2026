@@ -133,41 +133,45 @@ void motorControl_update()
     // - watchdog timeout
 }
 
-void test_motor0()
+void test_motor(uint8_t motorIndex)
 {
+    if (motorIndex >= 3) return; // safety check
+
+    const Motor& m = kMotors[motorIndex];
+
     // Setup pins
-    pinMode(M0_IN1_PIN, OUTPUT);
-    pinMode(M0_IN2_PIN, OUTPUT);
+    pinMode(m.in1Pin, OUTPUT);
+    pinMode(m.in2Pin, OUTPUT);
 
-    ledcSetup(M0_PWM_CH, MOTOR_PWM_FREQ, MOTOR_PWM_RESOLUTION);
-    ledcAttachPin(M0_PWM_PIN, M0_PWM_CH);
+    ledcSetup(m.pwmChannel, MOTOR_PWM_FREQ, MOTOR_PWM_RESOLUTION);
+    ledcAttachPin(m.pwmPin, m.pwmChannel);
 
-    // Enable driver (if using STBY)
+    // Enable driver
     if (MOTOR_STBY_PIN != 255) {
         pinMode(MOTOR_STBY_PIN, OUTPUT);
         digitalWrite(MOTOR_STBY_PIN, HIGH);
     }
 
     // ─── Forward ─────────────────────────
-    digitalWrite(M0_IN1_PIN, HIGH);
-    digitalWrite(M0_IN2_PIN, LOW);
-    ledcWrite(M0_PWM_CH, MOTOR_PWM_MAX * 0.6); // 60% speed
+    digitalWrite(m.in1Pin, HIGH);
+    digitalWrite(m.in2Pin, LOW);
+    ledcWrite(m.pwmChannel, MOTOR_PWM_MAX * 0.6);
     delay(3000);
 
     // ─── Stop ────────────────────────────
-    ledcWrite(M0_PWM_CH, 0);
-    digitalWrite(M0_IN1_PIN, LOW);
-    digitalWrite(M0_IN2_PIN, LOW);
+    ledcWrite(m.pwmChannel, 0);
+    digitalWrite(m.in1Pin, LOW);
+    digitalWrite(m.in2Pin, LOW);
     delay(1000);
 
     // ─── Reverse ─────────────────────────
-    digitalWrite(M0_IN1_PIN, LOW);
-    digitalWrite(M0_IN2_PIN, HIGH);
-    ledcWrite(M0_PWM_CH, MOTOR_PWM_MAX * 0.6);
+    digitalWrite(m.in1Pin, LOW);
+    digitalWrite(m.in2Pin, HIGH);
+    ledcWrite(m.pwmChannel, MOTOR_PWM_MAX * 0.6);
     delay(3000);
 
     // ─── Final stop ──────────────────────
-    ledcWrite(M0_PWM_CH, 0);
-    digitalWrite(M0_IN1_PIN, LOW);
-    digitalWrite(M0_IN2_PIN, LOW);
+    ledcWrite(m.pwmChannel, 0);
+    digitalWrite(m.in1Pin, LOW);
+    digitalWrite(m.in2Pin, LOW);
 }
