@@ -37,23 +37,28 @@ constexpr uint8_t  MOTOR_STBY_PIN = 4; // or 255 if tied HIGH
 constexpr uint8_t  KICKER_PIN           = 3;
 
 // ─── IR Sensors (VS1838B) ──────────────────────────────────────────────────
-constexpr uint8_t IR_SENSOR_COUNT    = 8;
-constexpr uint8_t IR_SENSOR_PINS[IR_SENSOR_COUNT] = { 19, 20, 21, 22, 23, 24, 25, 26 };
+// Layout: 3 front | wheel | 2 sensors | wheel | 2 sensors
+// Angles: front at 0°, wheel zones between, peripheral spread around
+constexpr uint8_t IR_SENSOR_COUNT = 8;
+constexpr uint8_t IR_SENSOR_PINS[IR_SENSOR_COUNT] = {
+    0, 0, 0, 0, 0, 0, 0, 0  // TODO: fill with actual GPIO pins
+};
+constexpr int16_t IR_SENSOR_ANGLES[IR_SENSOR_COUNT] = {
+    -30,   // Front-left (wheel gap)
+    0,     // Front-center
+    30,    // Front-right (wheel gap)
+    -90,   // Side-left sensor
+    -120,  // Side-left rear
+    90,    // Side-right sensor
+    120,   // Side-right rear
+    180    // Rear
+};
 
 // ─── Line Sensors ────────────────────────────────────────────────────────────
 
 //
 constexpr uint8_t  LINE_SENSOR_LEFT   = 10;
 constexpr uint8_t  LINE_SENSOR_RIGHT  = 11;
-
-// ── IR Ball Tracker Sensors (VS1838B — active LOW) ─────────────────────────────
-constexpr uint8_t IR_FRONT_LEFT_PIN   = 1;   // ← adjust to your actual GPIO
-constexpr uint8_t IR_FRONT_CENTER_PIN   = 2;
-constexpr uint8_t IR_FRONT_RIGHT_PIN   = 3;
-// Uncomment when adding peripheral sensors:
-// constexpr uint8_t IR_SIDE_LEFT_PIN   = 4
-// constexpr uint8_t IR_SIDE_RIGHT_PIN   = 5
-// constexpr uint8_t IR_REAR_PIN   = 6
 
 constexpr uint8_t  COMPASS_SDA_PIN      = 8;
 constexpr uint8_t  COMPASS_SCL_PIN      = 9;
