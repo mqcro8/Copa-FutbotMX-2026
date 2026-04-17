@@ -13,7 +13,6 @@ void irSensorArray_init() {
     for (uint8_t i = 0; i < IR_SENSOR_COUNT; ++i) {
         pinMode(IR_SENSOR_PINS[i], INPUT_PULLUP);
     }
-    Serial.println("[IRSensorArray] Initialized with " + String(IR_SENSOR_COUNT) + " sensors");
 }
 
 uint8_t irSensorArray_readPin(uint8_t index) {
@@ -97,4 +96,34 @@ BallZone irSensorArray_getZone() {
 
 bool irSensorArray_isInKickerZone() {
     return currentZone == BallZone::FRONT_CENTER;
+}
+
+void irSensorArray_update(IRData* data) {
+    if (!data) return;
+
+    for (uint8_t i = 0; i < IR_SENSOR_COUNT; ++i) {
+        sensorValues[i] = digitalRead(IR_SENSOR_PINS[i]);
+        data->values[i] = sensorValues[i];
+    }
+
+    int16_t activeAngles[IR_SENSOR_COUNT];
+    uint8_t activeCount = 0;
+    for (uint8_t i = 0; i < IR_SENSOR_COUNT; ++i) {
+        if (sensorValues[i] == LOW) {
+            activeAngles[activeCount++] = IR_SENSOR_ANGLES[i];
+        }
+    }
+
+    if (activeCount == 0) {
+        data->angle_deg = 0;
+        data->intensity = 0;
+        data->detected = false;
+        return;
+    }
+
+    data->angle_deg = (activeCount == 1)
+        ? activeAngles[0]
+        : normalizeAngle(circularMean(activeAngles, activeCount));
+    data->intensity = activeCount;
+    data->detected = true;
 }

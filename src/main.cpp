@@ -1,21 +1,26 @@
 #include <Arduino.h>
 #include "config/config.h"
 #include "core/state.h"
-#include "sensors/ir_sensor_array.h"
+#include "core/SensorManager.h"
+#include "drivers/motor_control.h"
 #include "debug_utils.h"
+
+static SensorManager sensors;
 
 void setup() {
     Serial.begin(115200);
     LOG("MAIN", "Ready for testing...");
 
     Core::init();
-    irSensorArray_init();
+    motorControl_init();
+    sensors.init();
 
     LOG("MAIN", "Initialization complete");
 }
 
 void safeShutdown() {
     LOG("MAIN", "Safe shutdown executed");
+    motorControl_stopAll();
 }
 
 void loop() {
@@ -27,12 +32,36 @@ void loop() {
         ESP.restart();
     }
 
-    static uint8_t lastValue = 2;
-    uint8_t currentValue = irSensorArray_readPin(1);
-    if (currentValue != lastValue) {
-        lastValue = currentValue;
-        LOG("IR", "Pin1=%d", currentValue);
-    }
+    sensors.update();
+    Core::updateIRData(sensors.getIRData());
 
-    Core::update();
+    static uint32_t lastMotorTest = 0;
+    static uint8_t step = 0;
+    uint32_t now = millis();
+
+    if (now - lastMotorTest >= 5000) {
+        lastMotorTest = now;
+        step = (step + 1) % 4;
+
+        switch (step) {
+            case 0:
+                LOG("MTR", "Forward");
+                motorControl_setVelocity(0.3f, 0.0f, 0.0f);
+                break;
+            case 1:
+                LOG("MTR", "Backward");
+                motorControl_setVelocity(-0.3f, 0.0f, 0.0f);
+                break;
+            case 2:
+                LOG("MTR", "Rotate Left");
+                motorControl_setVelocity(0.0f, 0.0f, 1.0f);
+                break;
+            case 3:
+                LOG("MTR", "Rotate Right");
+                motorControl_setVelocity(0.0f, 0.0f, -1.0f);
+                break;
+        }
+    } else if (now - lastMotorTest >= 500) {
+        motorControl_stop();
+    }
 }

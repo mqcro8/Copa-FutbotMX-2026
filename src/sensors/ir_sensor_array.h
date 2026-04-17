@@ -15,6 +15,13 @@ struct BallVector {
     bool detected;
 };
 
+struct IRData {
+    uint8_t values[MAX_IR_SENSORS];
+    int16_t angle_deg;
+    uint8_t intensity;
+    bool detected;
+};
+
 enum class BallZone {
     NOT_DETECTED,
     FRONT_CENTER,
@@ -26,8 +33,9 @@ enum class BallZone {
 };
 
 void irSensorArray_init();
-uint8_t irSensorArray_readPin(uint8_t index);  // Read single pin value
-IRSensorReadings irSensorArray_read();       // Clase 1: lectura-cruda
-BallVector irSensorArray_analyze();            // Clase 2: analisis
+uint8_t irSensorArray_readPin(uint8_t index);
+IRSensorReadings irSensorArray_read();
+BallVector irSensorArray_analyze();
 BallZone irSensorArray_getZone();
 bool irSensorArray_isInKickerZone();
+void irSensorArray_update(IRData* data);

@@ -1,5 +1,6 @@
 #pragma once
 #include "../shared/ir_protocol.h"
+#include "../sensors/ir_sensor_array.h"
 #include <cstdint>
 
 namespace Core {
@@ -10,7 +11,9 @@ namespace Core {
     extern int16_t ball_angle;
     extern uint8_t ball_confidence;
     extern uint32_t last_heartbeat_ms;
+    extern IRData irData;
 
     void init();
     void update();
+    void updateIRData(const IRData& data);
 }

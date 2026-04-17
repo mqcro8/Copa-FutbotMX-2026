@@ -8,6 +8,7 @@ namespace Core {
     int16_t ball_angle = 0;
     uint8_t ball_confidence = 0;
     uint32_t last_heartbeat_ms = 0;
+    IRData irData = {};
 
     void init() {
         state = RobotState::IDLE;
@@ -15,5 +16,9 @@ namespace Core {
     }
 
     void update() {
+    }
+
+    void updateIRData(const IRData& data) {
+        irData = data;
     }
 }
