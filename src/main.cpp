@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "config/config.h"
 #include "core/state.h"
-#include "drivers/kicker.h"
+#include "sensors/ir_sensor_array.h"
 #include "debug_utils.h"
 
 void setup() {
@@ -9,7 +9,7 @@ void setup() {
     LOG("MAIN", "Ready for testing...");
 
     Core::init();
-    kicker_init();
+    irSensorArray_init();
 
     LOG("MAIN", "Initialization complete");
 }
@@ -27,13 +27,12 @@ void loop() {
         ESP.restart();
     }
 
-    static uint32_t lastKickTest = 0;
-    uint32_t now = millis();
-    if (now - lastKickTest >= 3000) {
-        lastKickTest = now;
-        kick();
+    static uint8_t lastValue = 2;
+    uint8_t currentValue = irSensorArray_readPin(1);
+    if (currentValue != lastValue) {
+        lastValue = currentValue;
+        LOG("IR", "Pin1=%d", currentValue);
     }
 
-    kicker_update();
     Core::update();
 }

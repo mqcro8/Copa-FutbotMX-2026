@@ -11,9 +11,14 @@ BallVector currentVector = { -1, 0, false };
 
 void irSensorArray_init() {
     for (uint8_t i = 0; i < IR_SENSOR_COUNT; ++i) {
-        pinMode(IR_SENSOR_PINS[i], INPUT);
+        pinMode(IR_SENSOR_PINS[i], INPUT_PULLUP);
     }
     Serial.println("[IRSensorArray] Initialized with " + String(IR_SENSOR_COUNT) + " sensors");
+}
+
+uint8_t irSensorArray_readPin(uint8_t index) {
+    if (index >= IR_SENSOR_COUNT) return 0;
+    return digitalRead(IR_SENSOR_PINS[index]);
 }
 
 static int16_t normalizeAngle(int16_t angle) {
@@ -56,15 +61,6 @@ IRSensorReadings irSensorArray_read() {
         reading.values[i] = sensorValues[i];
     }
 
-    Serial.print("[IR] RAW:");
-    for (uint8_t i = 0; i < IR_SENSOR_COUNT; ++i) {
-        Serial.print(" S");
-        Serial.print(i);
-        Serial.print("=");
-        Serial.print(sensorValues[i]);
-    }
-    Serial.println();
-
     return reading;
 }
 
@@ -81,7 +77,6 @@ BallVector irSensorArray_analyze() {
     if (activeCount == 0) {
         currentZone = BallZone::NOT_DETECTED;
         currentVector = { -1, 0, false };
-        Serial.println("[IR] ANALYZE: None detected");
         return currentVector;
     }
 
@@ -92,13 +87,6 @@ BallVector irSensorArray_analyze() {
     currentVector.detected = true;
 
     classifyZone(currentVector.angle_deg);
-
-    Serial.print("[IR] ANALYZE: Angle=");
-    Serial.print(currentVector.angle_deg);
-    Serial.print(" Intensity=");
-    Serial.print(currentVector.intensity);
-    Serial.print(" Zone=");
-    Serial.println((int)currentZone);
 
     return currentVector;
 }

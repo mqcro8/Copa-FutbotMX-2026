@@ -48,7 +48,7 @@ constexpr uint32_t KICK_COOLDOWN_MS = 2000;
 // Layout: 3 front | wheel | 2 sensors | wheel | 2 sensors = 7 total
 constexpr uint8_t IR_SENSOR_COUNT = 7;
 constexpr uint8_t IR_SENSOR_PINS[IR_SENSOR_COUNT] = {
-    1, 2, 3, 4, 5, 6, 7 // TODO: fill with actual GPIO pins
+    1, 2, 4, 5, 6, 7, 8 // TODO: fill with actual GPIO pins
 };
 constexpr int16_t IR_SENSOR_ANGLES[IR_SENSOR_COUNT] = {
     -30,  // Front-left (wheel gap)

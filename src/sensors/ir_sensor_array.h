@@ -26,7 +26,8 @@ enum class BallZone {
 };
 
 void irSensorArray_init();
+uint8_t irSensorArray_readPin(uint8_t index);  // Read single pin value
 IRSensorReadings irSensorArray_read();       // Clase 1: lectura-cruda
-BallVector irSensorArray_analyze();          // Clase 2: analisis
+BallVector irSensorArray_analyze();            // Clase 2: analisis
 BallZone irSensorArray_getZone();
 bool irSensorArray_isInKickerZone();
