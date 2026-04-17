@@ -1,23 +1,20 @@
 #include <Arduino.h>
 #include "config/config.h"
 #include "core/state.h"
-#include "drivers/motor_control.h"
-#include "sensors/ir_sensor_array.h"
+#include "drivers/kicker.h"
 #include "debug_utils.h"
 
 void setup() {
     Serial.begin(115200);
-    LOG("MAIN", "Starting robot in test mode...");
+    LOG("MAIN", "Ready for testing...");
 
     Core::init();
-    motorControl_init();
-    irSensorArray_init();
+    kicker_init();
 
     LOG("MAIN", "Initialization complete");
 }
 
 void safeShutdown() {
-    motorControl_stopAll();
     LOG("MAIN", "Safe shutdown executed");
 }
 
@@ -30,11 +27,13 @@ void loop() {
         ESP.restart();
     }
 
-    irSensorArray_read();
-    auto ball = irSensorArray_analyze();
+    static uint32_t lastKickTest = 0;
+    uint32_t now = millis();
+    if (now - lastKickTest >= 3000) {
+        lastKickTest = now;
+        kick();
+    }
 
-    LOG("IR", "Zone=%d Angle=%d Intensity=%d Detected=%d",
-        (int)irSensorArray_getZone(), ball.angle_deg, ball.intensity, ball.detected);
-
+    kicker_update();
     Core::update();
 }
