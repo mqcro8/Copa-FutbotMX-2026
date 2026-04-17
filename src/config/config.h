@@ -17,8 +17,8 @@ constexpr uint16_t MOTOR_PWM_MAX = (1 << MOTOR_PWM_RESOLUTION) - 1;
 // ─── Motor 0 (M1 – 90°)
 // ────────────────────────────────────────────────────────
 constexpr uint8_t M0_PWM_PIN = 10;
-constexpr uint8_t M0_IN1_PIN = 11;
-constexpr uint8_t M0_IN2_PIN = 12;
+constexpr uint8_t M0_IN1_PIN = 12;
+constexpr uint8_t M0_IN2_PIN = 11;
 constexpr uint8_t M0_PWM_CH = 0;
 
 // ─── Motor 1 (M2 – 210°)
@@ -37,7 +37,7 @@ constexpr uint8_t M2_PWM_CH = 2;
 
 // ─── TB6612FNG STBY pin
 // ────────────────────────────────────────────────────────
-constexpr uint8_t MOTOR_STBY_PIN = 4; // or 255 if tied HIGH
+constexpr uint8_t MOTOR_STBY_PIN = 9; // or 255 if tied HIGH
 //
 
 constexpr uint8_t KICKER_PIN = 40;

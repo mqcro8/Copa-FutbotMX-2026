@@ -78,25 +78,33 @@ void motorControl_init()
 
 void motorControl_setVelocity(float vx, float vy, float omega)
 {
+    // API convention:   vx = forward (+), vy = strafe-left (+), omega = CCW (+)
+    // Math convention:  Xm = right,       Ym = forward
+    // Map:  Xm = -vy,  Ym = vx
+    const float mathX = -vy;   // strafe-left in API  → negative X in math frame
+    const float mathY =  vx;   // forward in API      → positive Y in math frame
+
     float speeds[3];
     float maxAbs = 0.0f;
 
-    // Compute wheel speeds
+    // Cinemática inversa 3WD: v_i = -Xm·sin(φ_i) + Ym·cos(φ_i) + ω
+    // Con ángulos φ = {90°, 210°, 330°} los cosenos/senos se precalculan:
+    //   Motor 0 (90°):  sin=1,      cos=0       → v0 = -Xm + 0 + ω
+    //   Motor 1 (210°): sin=-0.5,   cos=-0.866  → v1 = 0.5·Xm - 0.866·Ym + ω
+    //   Motor 2 (330°): sin=-0.5,   cos=0.866   → v2 = 0.5·Xm + 0.866·Ym + ω
     for (int i = 0; i < 3; ++i) {
-        float s = kWheelAngle[i];
+        const float phi = kWheelAngle[i];
+        speeds[i] = -mathX * sinf(phi)
+                    + mathY * cosf(phi)
+                    + omega;  // omega ya está normalizado -1..1
 
-        speeds[i] = -vx * sinf(s)
-                    + vy * cosf(s)
-                    + omega * ROBOT_BASE_RADIUS;
-
-        float a = fabsf(speeds[i]);
+        const float a = fabsf(speeds[i]);
         if (a > maxAbs) maxAbs = a;
     }
 
-    // Normalize if needed
-    float scale = (maxAbs > 1.0f) ? (1.0f / maxAbs) : 1.0f;
+    // Normalizar para mantener proporciones si alguna rueda excede ±1.0
+    const float scale = (maxAbs > 1.0f) ? (1.0f / maxAbs) : 1.0f;
 
-    // Apply to motors
     for (int i = 0; i < 3; ++i) {
         motor_drive(kMotors[i], speeds[i] * scale);
     }

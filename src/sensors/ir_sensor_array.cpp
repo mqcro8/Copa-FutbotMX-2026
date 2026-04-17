@@ -127,3 +127,36 @@ void irSensorArray_update(IRData* data) {
     data->intensity = activeCount;
     data->detected = true;
 }
+
+namespace {
+    struct SensorState {
+        uint8_t lastValue;
+        uint32_t lastChangeTime;
+    };
+    SensorState sensorStates[IR_SENSOR_COUNT] = {};
+    bool initialized = false;
+}
+
+bool irSensorArray_getStable(uint8_t index, uint32_t debounceMs) {
+    if (index >= IR_SENSOR_COUNT) return false;
+
+    if (!initialized) {
+        uint32_t now = millis();
+        for (uint8_t i = 0; i < IR_SENSOR_COUNT; ++i) {
+            sensorStates[i].lastValue = digitalRead(IR_SENSOR_PINS[i]);
+            sensorStates[i].lastChangeTime = now;
+        }
+        initialized = true;
+    }
+
+    uint8_t currentValue = digitalRead(IR_SENSOR_PINS[index]);
+    uint32_t now = millis();
+
+    if (currentValue != sensorStates[index].lastValue) {
+        sensorStates[index].lastValue = currentValue;
+        sensorStates[index].lastChangeTime = now;
+        return false;
+    }
+
+    return (now - sensorStates[index].lastChangeTime) >= debounceMs;
+}

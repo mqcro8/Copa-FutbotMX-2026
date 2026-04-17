@@ -39,3 +39,5 @@ BallVector irSensorArray_analyze();
 BallZone irSensorArray_getZone();
 bool irSensorArray_isInKickerZone();
 void irSensorArray_update(IRData* data);
+
+bool irSensorArray_getStable(uint8_t index, uint32_t debounceMs);
