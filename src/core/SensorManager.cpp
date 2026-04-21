@@ -14,6 +14,8 @@ bool SensorManager::init() {
     
     _irMutex = xSemaphoreCreateMutex();
     
+    irSensorArray_init(); // Initialize IR sensor pins
+    
     return _colorInitialized;
 }
 

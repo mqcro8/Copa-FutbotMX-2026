@@ -47,6 +47,7 @@ constexpr uint32_t KICK_COOLDOWN_MS = 2000;
 // ─── IR Sensors (VS1838B) ──────────────────────────────────────────────────
 // Layout: 3 front | wheel | 2 sensors | wheel | 2 sensors = 7 total
 constexpr uint8_t IR_SENSOR_COUNT = 7;
+static_assert(IR_SENSOR_COUNT == 7, "IR sensor count mismatch");
 constexpr uint8_t IR_SENSOR_PINS[IR_SENSOR_COUNT] = {
     1, 2, 4, 5, 6, 7, 8 // TODO: fill with actual GPIO pins
 };
@@ -85,3 +86,17 @@ constexpr float BALL_KD = 0.0f;
 constexpr uint32_t MAIN_LOOP_FREQ_HZ = 100;
 constexpr uint32_t HEARTBEAT_INTERVAL_MS = 50;
 constexpr uint32_t COMMS_TIMEOUT_MS = 500;
+
+// ─── WiFi ────────────────────────────────────────────────────────────────────────────
+constexpr const char* WIFI_AP_SSID = "FutBotMX-";
+constexpr const char* WIFI_AP_PASSWORD = "futbot2026";
+constexpr const char* WIFI_AP_HOSTNAME = "futbotmx";
+constexpr uint8_t WIFI_AP_CHANNEL = 1;
+constexpr int8_t WIFI_AP_MAX_CONN = 4;
+constexpr uint32_t WIFI_CONNECT_TIMEOUT_MS = 15000;
+constexpr uint8_t WIFI_STA_RETRY_MAX = 10;
+
+// ─── Web Server ────────────────────────────────────────────────────────────────────────────────
+constexpr uint16_t WEB_SERVER_PORT = 80;
+constexpr const char* WEB_WWW_DIR = "/www";
+constexpr const char* WEB_INDEX_FILE = "index.html";

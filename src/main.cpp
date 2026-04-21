@@ -1,20 +1,35 @@
 #include <Arduino.h>
+#include <LittleFS.h>
 #include "config/config.h"
 #include "core/state.h"
 #include "core/SensorManager.h"
 #include "drivers/motor_control.h"
+#include "net/wifi.h"
+#include "net/web_server.h"
 #include "debug_utils.h"
 
 static SensorManager sensors;
 
 void setup() {
     Serial.begin(115200);
-    LOG("MAIN", "Ready for testing...");
+    delay(500);
+    LOG("MAIN", "FutBotMX 2026 booting...");
 
     Core::init();
     motorControl_init();
     sensors.init();
 
+    WiFiMgr::init();
+    LOG("MAIN", "WiFi initialized");
+
+    // begin(formatOnFail, basePath, maxOpenFiles, partitionLabel)
+    if (!LittleFS.begin(true, "/littlefs", 10, "littlefs")) {
+        LOG("MAIN", "LittleFS mount failed");
+    } else {
+        LOG("MAIN", "LittleFS mounted");
+    }
+
+    WebSrv::init();
     LOG("MAIN", "Initialization complete");
 }
 
@@ -23,38 +38,38 @@ void safeShutdown() {
     motorControl_stopAll();
 }
 
-// ─── Secuencia de prueba cinemática holonómica ────────────────────────────────
-enum class TestMode : uint8_t {
+static void handleEmergency() {
+    Core::killed = true;
+    motorControl_stopAll();
+    WebSrv::stop();
+    LOG("MAIN", "EMERGENCY STOP activated");
+}
+
+// ─── Velocidades de movimiento ────────────────────────────────────────────────
+constexpr float FWD_SPEED = 0.7f;    // velocidad lineal hacia adelante
+constexpr float ROT_SPEED = 0.6f;    // velocidad de giro
+
+// ─── Agrupación de sensores IR (índices 0-based) ──────────────────────────────
+//   Sensor 1 (idx 0)       → frente/centro  → ir derecho
+//   Sensores 2,3,4 (idx 1,2,3) → lado derecho → girar derecha
+//   Sensores 5,6,7 (idx 4,5,6) → lado izquierdo → girar izquierda
+
+// Retorna true si al menos uno de los sensores del grupo está activo (LOW)
+static bool groupActive(const IRData& ir, const uint8_t* indices, uint8_t count) {
+    for (uint8_t i = 0; i < count; ++i) {
+        if (indices[i] < IR_SENSOR_COUNT && ir.values[indices[i]] == LOW) {
+            return true;
+        }
+    }
+    return false;
+}
+
+enum class BallAction : uint8_t {
+    NONE,
     FORWARD,
-    BACKWARD,
-    STRAFE_LEFT,
-    STRAFE_RIGHT,
-    ROTATE_LEFT,
-    ROTATE_RIGHT,
-    PAUSE,        // pausa entre ciclos completos
-    COUNT         // centinela
+    TURN_RIGHT,
+    TURN_LEFT
 };
-
-struct TestStep {
-    TestMode mode;
-    float vx;
-    float vy;
-    float omega;
-    uint32_t durationMs;
-    const char* label;
-};
-
-// Secuencia completa de prueba — cada paso 1.5s, pausa entre pasos 400ms
-static constexpr TestStep kTestSequence[] = {
-    { TestMode::FORWARD,       0.7f,  0.0f,  0.0f, 1500, "FORWARD  (vx=+0.7)" },
-    { TestMode::BACKWARD,     -0.7f,  0.0f,  0.0f, 1500, "BACKWARD (vx=-0.7)" },
-    { TestMode::STRAFE_LEFT,   0.0f,  0.7f,  0.0f, 1500, "STRAFE-L (vy=+0.7)" },
-    { TestMode::STRAFE_RIGHT,  0.0f, -0.7f,  0.0f, 1500, "STRAFE-R (vy=-0.7)" },
-    { TestMode::ROTATE_LEFT,   0.0f,  0.0f,  0.6f, 1200, "ROT-CCW  (w=+0.6)"  },
-    { TestMode::ROTATE_RIGHT,  0.0f,  0.0f, -0.6f, 1200, "ROT-CW   (w=-0.6)"  },
-};
-static constexpr uint8_t kTestStepCount = sizeof(kTestSequence) / sizeof(kTestSequence[0]);
-static constexpr uint32_t kPauseBetweenSteps = 400; // ms
 
 void loop() {
     // ─── Kill switch ──────────────────────────────────────────────────────
@@ -66,49 +81,68 @@ void loop() {
         ESP.restart();
     }
 
+    // ─── Network (non-blocking) ──────────────────────────────────────────
+    WiFiMgr::update();
+    WebSrv::update();
+
+    // ─── Sensors ────────────────────────────────────────────────────────
     sensors.update();
-    Core::updateIRData(sensors.getIRData());
+    const IRData ir = sensors.getIRData();
+    Core::updateIRData(ir);
 
-    // ─── Test state machine (non-blocking) ────────────────────────────────
-    static uint8_t stepIndex = 0;
-    static uint32_t stepStart = 0;
-    static bool isPausing = false;
+    // ─── Evaluar qué grupo de sensores detecta la pelota ──────────────────
+    static constexpr uint8_t kCenterIdx[]  = { 0 };         // Sensor 1
+    static constexpr uint8_t kRightIdx[]   = { 1, 2, 3 };   // Sensores 2, 3, 4
+    static constexpr uint8_t kLeftIdx[]    = { 4, 5, 6 };   // Sensores 5, 6, 7
 
-    const uint32_t now = millis();
+    const bool center = groupActive(ir, kCenterIdx, 1);
+    const bool right  = groupActive(ir, kRightIdx,  3);
+    const bool left   = groupActive(ir, kLeftIdx,   3);
 
-    if (stepStart == 0) {
-        stepStart = now;
-
-        if (isPausing) {
-            LOG("TEST", "--- pausa ---");
-            motorControl_stop();
-        } else {
-            const TestStep& step = kTestSequence[stepIndex];
-            LOG("TEST", "[%d/%d] %s", stepIndex + 1, kTestStepCount, step.label);
-            motorControl_setVelocity(step.vx, step.vy, step.omega);
-        }
+    // Prioridad: centro > derecha > izquierda
+    BallAction action = BallAction::NONE;
+    if (center) {
+        action = BallAction::FORWARD;
+    } else if (right) {
+        action = BallAction::TURN_RIGHT;
+    } else if (left) {
+        action = BallAction::TURN_LEFT;
     }
 
-    const uint32_t elapsed = now - stepStart;
-    const uint32_t currentDuration = isPausing
-        ? kPauseBetweenSteps
-        : kTestSequence[stepIndex].durationMs;
+    // ─── Aplicar movimiento ───────────────────────────────────────────────
+    static BallAction lastAction = BallAction::NONE;
 
-    if (elapsed >= currentDuration) {
-        motorControl_stop();
-        stepStart = 0;
+    switch (action) {
+        case BallAction::FORWARD:
+            motorControl_setVelocity(FWD_SPEED, 0.0f, 0.0f);
+            break;
+        case BallAction::TURN_RIGHT:
+            motorControl_setVelocity(0.0f, 0.0f, -ROT_SPEED);
+            break;
+        case BallAction::TURN_LEFT:
+            motorControl_setVelocity(0.0f, 0.0f, ROT_SPEED);
+            break;
+        case BallAction::NONE:
+            motorControl_stop();
+            break;
+    }
 
-        if (isPausing) {
-            // Avanzar al siguiente paso
-            isPausing = false;
-            stepIndex = (stepIndex + 1) % kTestStepCount;
-
-            if (stepIndex == 0) {
-                LOG("TEST", "=== Ciclo completo, reiniciando ===");
-            }
-        } else {
-            // Entrar en pausa antes del siguiente paso
-            isPausing = true;
+    // Log solo cuando cambia la acción (evitar spam serial)
+    if (action != lastAction) {
+        switch (action) {
+            case BallAction::FORWARD:
+                LOG("BALL", "Sensor 1 activo -> FORWARD");
+                break;
+            case BallAction::TURN_RIGHT:
+                LOG("BALL", "Sensores 2-4 activos -> TURN RIGHT (CW)");
+                break;
+            case BallAction::TURN_LEFT:
+                LOG("BALL", "Sensores 5-7 activos -> TURN LEFT (CCW)");
+                break;
+            case BallAction::NONE:
+                LOG("BALL", "Sin deteccion -> STOP");
+                break;
         }
+        lastAction = action;
     }
 }
