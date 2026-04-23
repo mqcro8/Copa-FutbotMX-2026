@@ -69,7 +69,7 @@ static void handleState(AsyncWebServerRequest* request) {
              "\"heading_deg\":%d,\"ball_angle_deg\":%d,\"ball_confidence\":%u}"),
         roleStr, stateStr,
         Core::killed ? "true" : "false",
-        Core::current_heading,
+        (int16_t)Core::gyroData.yaw_deg,
         Core::ball_angle,
         Core::ball_confidence
     );
@@ -82,13 +82,15 @@ static void handleState(AsyncWebServerRequest* request) {
 static void handleTelemetry(AsyncWebServerRequest* request) {
     s_request_count++;
 
+    int16_t heading = (int16_t)Core::gyroData.yaw_deg;
+
     char json[2048];
     int len = snprintf_P(json, sizeof(json),
         PSTR("{\"core\":{\"role\":%d,\"state\":%d,\"killed\":%s,"
              "\"heading\":%d,\"ball_angle\":%d,\"ball_conf\":%u},\"ir\":{"),
         (uint8_t)Core::role, (uint8_t)Core::state,
         Core::killed ? "true" : "false",
-        Core::current_heading,
+        heading,
         Core::ball_angle,
         Core::ball_confidence
     );
