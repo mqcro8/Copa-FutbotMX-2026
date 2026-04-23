@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FutBotMX 2026 - Telemetry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>FutBotMX Telemetry</h1>
+        <div class="status-badge" id="connStatus">
+            <div class="status-dot"></div>
+            <span id="connText">Connected</span>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+        
+        <!-- System State Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">System Core</div>
+            </div>
+            <div>
+                <div class="data-row">
+                    <span class="data-label">Role</span>
+                    <span class="data-value highlight" id="sysRole">STRIKER</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">State</span>
+                    <span class="data-value" id="sysState">SEARCHING_BALL</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Emergency Stop</span>
+                    <span class="data-value" style="color: var(--success-glow);" id="sysKilled">FALSE</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Uptime</span>
+                    <span class="data-value" id="sysUptime">00:00:00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compass Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">IMU / Heading</div>
+            </div>
+            <div class="compass-container">
+                <div class="compass-marks"></div>
+                <div class="compass-labels">
+                    <span class="n">N</span>
+                    <span class="e">E</span>
+                    <span class="s">S</span>
+                    <span class="w">W</span>
+                </div>
+                <div class="compass-arrow" id="compassArrow"></div>
+                <div class="compass-value" id="compassValue">0°</div>
+            </div>
+            <div class="imu-angles">
+                <div class="imu-angle">Pitch: <span id="imuPitch">0.0°</span></div>
+                <div class="imu-angle">Roll: <span id="imuRoll">0.0°</span></div>
+                <div class="imu-angle">Yaw: <span id="imuYaw">0.0°</span></div>
+            </div>
+        </div>
+
+        <!-- IR Ball Radar Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">IR Ball Array</div>
+            </div>
+            <div class="ir-radar-container">
+                <canvas id="irRadar" width="250" height="250"></canvas>
+                <div class="ir-data-overlay">
+                    <span title="Calculated Angle" id="irAngle">∠ 0°</span>
+                    <span title="Peak Intensity" id="irIntensity">⚡ 0</span>
+                </div>
+            </div>
+            <div class="ir-sensor-values">
+                <div class="ir-sensor-badge">S0: <span id="irRaw0">0</span></div>
+                <div class="ir-sensor-badge">S1: <span id="irRaw1">0</span></div>
+                <div class="ir-sensor-badge">S2: <span id="irRaw2">0</span></div>
+                <div class="ir-sensor-badge">S3: <span id="irRaw3">0</span></div>
+                <div class="ir-sensor-badge">S4: <span id="irRaw4">0</span></div>
+                <div class="ir-sensor-badge">S5: <span id="irRaw5">0</span></div>
+                <div class="ir-sensor-badge">S6: <span id="irRaw6">0</span></div>
+            </div>
+        </div>
+
+        <!-- Color Sensors Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Line Detectors (RGB)</div>
+            </div>
+            <div class="color-sensor-grid">
+                <div class="cs-box front" id="csFront" style="--sensor-color: #22c55e;">
+                    <span class="cs-label">FRONT</span>
+                    <span class="cs-rgb">0,0,0</span>
+                </div>
+                <div class="cs-box left" id="csLeft" style="--sensor-color: #22c55e;">
+                    <span class="cs-label">LEFT</span>
+                    <span class="cs-rgb">0,0,0</span>
+                </div>
+                <div class="cs-box right" id="csRight" style="--sensor-color: #ffffff;">
+                    <span class="cs-label">RIGHT</span>
+                    <span class="cs-rgb">255,255,255</span>
+                </div>
+                <div class="cs-box back" id="csBack" style="--sensor-color: #22c55e;">
+                    <span class="cs-label">BACK</span>
+                    <span class="cs-rgb">0,0,0</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

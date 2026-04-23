@@ -3,6 +3,7 @@
 #include "config/config.h"
 #include <Arduino.h>
 #include "debug_utils.h"
+#include "sensors/ir_sensor_array.h"
 
 namespace {
 constexpr int16_t TEST_FORWARD_SPEED = 150;
@@ -13,19 +14,26 @@ enum class TestPhase : uint8_t { FORWARD, ROTATE_CW, ROTATE_CCW };
 TestPhase currentPhase = TestPhase::FORWARD;
 uint32_t lastPhaseChange = 0;
 bool initialized = false;
+IRSensorArray irTest;
 }  // namespace
 
 void algorithmTest_init()
 {
     motorControl_init();
+    irTest.init();
     initialized = true;
     lastPhaseChange = millis();
-    LOG("TEST", "Motor test initialized");
+    LOG("TEST", "Motor and IR sensor test initialized");
 }
 
 void algorithmTest_loop()
 {
     if (!initialized) return;
+
+    irTest.update();
+    IRData ball = irTest.getData();
+    LOG("IR", "Angle=%d Intensity=%d Detected=%d",
+        ball.angle_deg, ball.intensity, ball.detected);
 
     uint32_t now = millis();
     if (now - lastPhaseChange < TEST_PHASE_DURATION_MS) return;
