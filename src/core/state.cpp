@@ -9,6 +9,8 @@ namespace Core {
     uint8_t ball_confidence = 0;
     uint32_t last_heartbeat_ms = 0;
     IRData irData = {};
+    ColorSensorData colorData = {};
+    GyroData gyroData = {};
 
     void init() {
         state = RobotState::IDLE;
@@ -20,5 +22,13 @@ namespace Core {
 
     void updateIRData(const IRData& data) {
         irData = data;
+    }
+
+    void updateColorData(const ColorSensorData& data) {
+        colorData = data;
+    }
+
+    void updateGyroData(const GyroData& data) {
+        gyroData = data;
     }
 }

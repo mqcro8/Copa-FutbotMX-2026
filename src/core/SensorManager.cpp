@@ -4,19 +4,26 @@
 bool SensorManager::init() {
     LOG("SENS", "Initializing sensors...");
     
-    _colorInitialized = _color.init();
-    
+    uint8_t colorCount = _color.init();
+    _colorInitialized = (colorCount > 0);
+
     if (_colorInitialized) {
-        LOG("SENS", "Color sensors initialized OK");
+        LOG("SENS", "Color sensors OK (%d/%d available)", colorCount, ColorSensorArray::NUM_SENSORS);
     } else {
-        LOG("SENS", "Color sensors FAILED");
+        LOG("SENS", "Color sensors: NONE available");
     }
     
-    _irMutex = xSemaphoreCreateMutex();
+    _ir.init();
+    LOG("SENS", "IR sensor array initialized");
+
+    _gyroInitialized = _gyro.init();
+    if (_gyroInitialized) {
+        LOG("SENS", "Gyro BMI160 OK");
+    } else {
+        LOG("SENS", "Gyro: not available");
+    }
     
-    irSensorArray_init(); // Initialize IR sensor pins
-    
-    return _colorInitialized;
+    return _colorInitialized || _gyroInitialized;
 }
 
 void SensorManager::update() {
@@ -24,9 +31,10 @@ void SensorManager::update() {
         _color.update();
     }
 
-    if (_irMutex && xSemaphoreTake(_irMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
-        irSensorArray_update(&_irData);
-        xSemaphoreGive(_irMutex);
+    _ir.update();
+
+    if (_gyroInitialized) {
+        _gyro.update();
     }
 }
 
@@ -42,10 +50,12 @@ bool SensorManager::hasColorSensors() const {
 }
 
 IRData SensorManager::getIRData() const {
-    IRData data = {};
-    if (_irMutex && xSemaphoreTake(_irMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
-        data = _irData;
-        xSemaphoreGive(_irMutex);
+    return _ir.getData();
+}
+
+GyroData SensorManager::getGyroData() const {
+    if (_gyroInitialized) {
+        return _gyro.getData();
     }
-    return data;
+    return {};
 }

@@ -3,6 +3,7 @@
 #include "debug_utils.h"
 #include "../core/state.h"
 #include "../config/config.h"
+#include "../sensors/gyro.h"
 #include <LittleFS.h>
 
 namespace {
@@ -81,7 +82,7 @@ static void handleState(AsyncWebServerRequest* request) {
 static void handleTelemetry(AsyncWebServerRequest* request) {
     s_request_count++;
 
-    char json[1024];
+    char json[2048];
     int len = snprintf_P(json, sizeof(json),
         PSTR("{\"core\":{\"role\":%d,\"state\":%d,\"killed\":%s,"
              "\"heading\":%d,\"ball_angle\":%d,\"ball_conf\":%u},\"ir\":{"),
@@ -101,7 +102,33 @@ static void handleTelemetry(AsyncWebServerRequest* request) {
     }
 
     len += snprintf(json + len, sizeof(json) - len,
-        PSTR("},\"uptime_ms\":%lu}"),
+        PSTR("},\"color\":{"));
+
+    for (uint8_t i = 0; i < 4; i++) {
+        len += snprintf(json + len, sizeof(json) - len,
+            "%s\"s%d\":{\"c\":%u,\"r\":%u,\"g\":%u,\"b\":%u,\"white\":%s}",
+            i > 0 ? "," : "",
+            i,
+            Core::colorData.readings[i].clear,
+            Core::colorData.readings[i].red,
+            Core::colorData.readings[i].green,
+            Core::colorData.readings[i].blue,
+            Core::colorData.onWhiteLine[i] ? "true" : "false"
+        );
+    }
+
+    static const GyroData& gyroData = Core::gyroData;
+    len += snprintf(json + len, sizeof(json) - len,
+        PSTR("},\"gyro\":{\"gx\":%d,\"gy\":%d,\"gz\":%d,\"ax\":%d,\"ay\":%d,\"az\":%d,\"pitch\":%.1f,\"roll\":%.1f,\"yaw\":%.1f,\"temp\":%.1f,\"valid\":%s}"),
+        gyroData.gyro_x, gyroData.gyro_y, gyroData.gyro_z,
+        gyroData.acc_x, gyroData.acc_y, gyroData.acc_z,
+        gyroData.pitch_deg, gyroData.roll_deg, gyroData.yaw_deg,
+        gyroData.temp_celsius,
+        gyroData.valid ? "true" : "false"
+    );
+
+    len += snprintf(json + len, sizeof(json) - len,
+        PSTR(",\"uptime_ms\":%lu}"),
         millis() - s_start_ms
     );
 

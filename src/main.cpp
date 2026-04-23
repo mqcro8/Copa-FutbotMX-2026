@@ -6,6 +6,8 @@
 #include "drivers/motor_control.h"
 #include "net/wifi.h"
 #include "net/web_server.h"
+#include "sensors/ColorSensorArray.h"
+#include "sensors/gyro.h"
 #include "debug_utils.h"
 
 static SensorManager sensors;
@@ -90,6 +92,16 @@ void loop() {
     const IRData ir = sensors.getIRData();
     Core::updateIRData(ir);
 
+    if (sensors.hasColorSensors()) {
+        const ColorSensorData cs = sensors.getColorData();
+        Core::updateColorData(cs);
+    }
+
+    if (sensors.hasGyro()) {
+        const GyroData gyro = sensors.getGyroData();
+        Core::updateGyroData(gyro);
+    }
+
     // ─── Evaluar qué grupo de sensores detecta la pelota ──────────────────
     static constexpr uint8_t kCenterIdx[]  = { 0 };         // Sensor 1
     static constexpr uint8_t kRightIdx[]   = { 1, 2, 3 };   // Sensores 2, 3, 4
@@ -144,5 +156,20 @@ void loop() {
                 break;
         }
         lastAction = action;
+    }
+
+    // ─── Debug 5 segundos ──────────────────────────────────────────────────
+    static uint32_t lastDebugTime = 0;
+    if (millis() - lastDebugTime > 5000) {
+        lastDebugTime = millis();
+        if (sensors.hasGyro()) {
+            const GyroData gyro = sensors.getGyroData();
+            LOG("GYRO_DEBUG", "G: x:%d y:%d z:%d | A: x:%d y:%d z:%d | T:%.1fC valid:%d",
+                gyro.gyro_x, gyro.gyro_y, gyro.gyro_z,
+                gyro.acc_x, gyro.acc_y, gyro.acc_z,
+                gyro.temp_celsius, gyro.valid);
+        } else {
+            LOG("GYRO_DEBUG", "No gyro detected.");
+        }
     }
 }

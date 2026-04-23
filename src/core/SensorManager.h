@@ -2,8 +2,7 @@
 #include <cstdint>
 #include "sensors/ColorSensorArray.h"
 #include "sensors/ir_sensor_array.h"
-#include "freertos/FreeRTOS.h"
-#include "semphr.h"
+#include "sensors/gyro.h"
 
 class SensorManager {
 public:
@@ -15,10 +14,15 @@ public:
 
     IRData getIRData() const;
 
+    GyroData getGyroData() const;
+    bool hasGyro() const { return _gyroInitialized; }
+
 private:
     ColorSensorArray _color;
-    bool _colorInitialized;
+    bool _colorInitialized = false;
 
-    SemaphoreHandle_t _irMutex;
-    IRData _irData;
+    IRSensorArray _ir;
+
+    GyroBMI160 _gyro;
+    bool _gyroInitialized = false;
 };
