@@ -104,9 +104,9 @@ bool GyroBMI160::readRawData() {
     _data.acc_y = (int16_t)(bytes[8] | (bytes[9] << 8));
     _data.acc_z = (int16_t)(bytes[10] | (bytes[11] << 8));
 
-    float gx = (float)_data.gyro_x / 131.0f;
-    float gy = (float)_data.gyro_y / 131.0f;
-    float gz = (float)_data.gyro_z / 131.0f;
+    float gx = (float)_data.gyro_x / 16.384f;
+    float gy = (float)_data.gyro_y / 16.384f;
+    float gz = (float)_data.gyro_z / 16.384f;
 
     uint32_t now = micros();
     if (_lastUpdate > 0 && !_firstReading) {
@@ -126,9 +126,8 @@ bool GyroBMI160::readRawData() {
     }
     _lastUpdate = now;
 
-    // Wrap yaw to -180 to 180 for heading display
-    while (_yaw > 180.0f) _yaw -= 360.0f;
-    while (_yaw < -180.0f) _yaw += 360.0f;
+    if (_yaw >= 360.0f) _yaw -= 360.0f;
+    else if (_yaw < 0.0f) _yaw += 360.0f;
 
     _data.pitch_deg = _pitch;
     _data.roll_deg = _roll;
