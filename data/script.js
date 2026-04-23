@@ -9,12 +9,19 @@ function updateSystemState(data) {
     killedEl.style.color = data.killed ? "var(--alert-glow)" : "var(--success-glow)";
 }
 
-function updateCompass(heading) {
+function updateCompass(heading, gyroData) {
     // CSS rotation for compass
     const arrow = document.getElementById('compassArrow');
     const val = document.getElementById('compassValue');
     arrow.style.transform = `rotate(${heading}deg)`;
     val.textContent = `${Math.round(heading)}°`;
+    
+    // Update IMU angles
+    if (gyroData) {
+        document.getElementById('imuPitch').textContent = `${gyroData.pitch.toFixed(1)}°`;
+        document.getElementById('imuRoll').textContent = `${gyroData.roll.toFixed(1)}°`;
+        document.getElementById('imuYaw').textContent = `${gyroData.yaw.toFixed(1)}°`;
+    }
 }
 
 function updateColorSensors(sensors) {
@@ -129,8 +136,13 @@ async function fetchTelemetry() {
             killed: data.core.killed
         });
 
-        // 2. Heading
-        updateCompass(data.core.heading);
+        // 2. Heading + IMU
+        const gyroData = data.gyro ? {
+            pitch: data.gyro.pitch,
+            roll: data.gyro.roll,
+            yaw: data.gyro.yaw
+        } : null;
+        updateCompass(data.core.heading, gyroData);
 
         // 3. IR Radar & Individual Sensors
         const irRawArray = [

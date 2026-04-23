@@ -6,7 +6,10 @@
 
 namespace {
     float _yaw = 0.0f;
+    float _pitch = 0.0f;
+    float _roll = 0.0f;
     uint32_t _lastUpdate = 0;
+    bool _firstReading = true;
 }
 
 GyroBMI160::GyroBMI160() {}
@@ -101,22 +104,30 @@ bool GyroBMI160::readRawData() {
     _data.acc_y = (int16_t)(bytes[8] | (bytes[9] << 8));
     _data.acc_z = (int16_t)(bytes[10] | (bytes[11] << 8));
 
-    float ax = (float)_data.acc_x / 16384.0f;
-    float ay = (float)_data.acc_y / 16384.0f;
-    float az = (float)_data.acc_z / 16384.0f;
+    float gx = (float)_data.gyro_x / 131.0f;
+    float gy = (float)_data.gyro_y / 131.0f;
+    float gz = (float)_data.gyro_z / 131.0f;
 
-    _data.pitch_deg = atan2(-ax, sqrt(ay * ay + az * az)) * 180.0f / M_PI;
-    _data.roll_deg = atan2(ay, az) * 180.0f / M_PI;
+    uint32_t now = micros();
+    if (_lastUpdate > 0 && !_firstReading) {
+        float dt = (float)(now - _lastUpdate) / 1000000.0f;
 
-    uint32_t now = millis();
-    if (_lastUpdate > 0) {
-        float dt = (float)(now - _lastUpdate) / 1000.0f;
-        float gz = (float)_data.gyro_z / 131.0f;
-        _yaw += gz * dt;
-        if (_yaw > 180.0f) _yaw -= 360.0f;
-        if (_yaw < -180.0f) _yaw += 360.0f;
+        _pitch += gx * dt * 180.0f / M_PI;
+        _roll += gy * dt * 180.0f / M_PI;
+        _yaw += gz * dt * 180.0f / M_PI;
+    } else {
+        _firstReading = false;
+
+        float ax = (float)_data.acc_x / 16384.0f;
+        float ay = (float)_data.acc_y / 16384.0f;
+        float az = (float)_data.acc_z / 16384.0f;
+        _pitch = atan2(-ax, sqrt(ay * ay + az * az)) * 180.0f / M_PI;
+        _roll = atan2(ay, az) * 180.0f / M_PI;
     }
     _lastUpdate = now;
+
+    _data.pitch_deg = _pitch;
+    _data.roll_deg = _roll;
     _data.yaw_deg = _yaw;
 
     uint8_t tempReg = 0x22;
