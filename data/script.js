@@ -152,8 +152,13 @@ async function fetchTelemetry() {
         }
 
         // 4. Color Sensors
-        // Expecting data.color array. Fallback to 0 if not implemented yet in backend.
-        const colorData = data.color || [
+        // The backend sends data.color as an object: {"s0":{...}, "s1":{...}, ...}
+        const colorData = data.color ? [
+            data.color.s0 || {r: 0, g: 0, b: 0},
+            data.color.s1 || {r: 0, g: 0, b: 0},
+            data.color.s2 || {r: 0, g: 0, b: 0},
+            data.color.s3 || {r: 0, g: 0, b: 0}
+        ] : [
             {r: 0, g: 0, b: 0},
             {r: 0, g: 0, b: 0},
             {r: 0, g: 0, b: 0},
