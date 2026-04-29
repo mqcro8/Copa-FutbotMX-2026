@@ -335,3 +335,184 @@ canvas#irRadar {
     color: var(--accent-glow);
     font-weight: 700;
 }
+
+/* ESP-NOW Settings Panel */
+.mono {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}
+
+.role-select {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.role-select:hover,
+.role-select:focus {
+    border-color: var(--accent-glow);
+}
+
+.mac-input {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.mac-input:hover,
+.mac-input:focus {
+    border-color: var(--accent-glow);
+}
+
+.mac-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+
+.save-btn {
+    width: 100%;
+    padding: 0.75rem;
+    margin-top: 1rem;
+    background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+    border: none;
+    border-radius: 0.5rem;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4);
+}
+
+.save-btn:active {
+    transform: translateY(0);
+}
+
+.save-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.save-status {
+    display: block;
+    text-align: center;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    min-height: 1.2em;
+}
+
+.save-status.success {
+    color: var(--success-glow);
+}
+
+.save-status.error {
+    color: var(--alert-glow);
+}
+
+/* ESP-NOW Status indicator */
+#commsConn.connected {
+    color: var(--success-glow);
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+}
+
+#commsConn.disconnected {
+    color: var(--alert-glow);
+}
+
+/* Message History */
+.msg-history {
+    max-height: 180px;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    margin-bottom: 0.75rem;
+}
+
+.msg-entry {
+    padding: 0.25rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.msg-entry:last-child {
+    border-bottom: none;
+}
+
+.msg-entry.tx {
+    color: var(--accent-glow);
+}
+
+.msg-entry.rx {
+    color: var(--success-glow);
+}
+
+.msg-entry .msg-dir {
+    font-weight: 600;
+    min-width: 20px;
+}
+
+.msg-entry .msg-data {
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.msg-send {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.send-btn {
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border: none;
+    border-radius: 0.5rem;
+    color: white;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.send-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+}
+
+.send-btn:active {
+    transform: translateY(0);
+}
+
+.send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

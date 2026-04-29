@@ -9,6 +9,12 @@ function updateSystemState(data) {
     killedEl.style.color = data.killed ? "var(--alert-glow)" : "var(--success-glow)";
 }
 
+function updateSettingsPanel(data) {
+    document.getElementById('ownMac').textContent = data.own_mac;
+    document.getElementById('peerMac').textContent = data.peer_mac;
+    document.getElementById('roleSelect').value = data.role;
+}
+
 function updateCompass(heading, gyroData) {
     // CSS rotation for compass
     const arrow = document.getElementById('compassArrow');
@@ -196,3 +202,144 @@ async function fetchTelemetry() {
 
 // Poll every 100ms (10Hz)
 setInterval(fetchTelemetry, 100);
+
+// --- Settings API ---
+async function fetchSettings() {
+    try {
+        const response = await fetch('/api/settings');
+        if (!response.ok) throw new Error("HTTP Error");
+        const data = await response.json();
+        updateSettingsPanel(data);
+    } catch (err) {
+        console.error("Failed to fetch settings:", err);
+    }
+}
+
+async function saveSettings() {
+    const btn = document.getElementById('saveSettingsBtn');
+    const status = document.getElementById('saveStatus');
+    const peerMac = document.getElementById('newPeerMac').value.trim();
+    const role = document.getElementById('roleSelect').value;
+
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    status.textContent = '';
+    status.className = 'save-status';
+
+    try {
+        const params = new URLSearchParams();
+        if (peerMac) params.append('peer_mac', peerMac);
+        params.append('role', role);
+
+        const response = await fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            status.textContent = 'Saved!';
+            status.className = 'save-status success';
+            document.getElementById('newPeerMac').value = '';
+            await fetchSettings();
+        } else {
+            status.textContent = result.message || 'Error';
+            status.className = 'save-status error';
+        }
+    } catch (err) {
+        status.textContent = 'Network error';
+        status.className = 'save-status error';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Save Settings';
+}
+
+// Event listeners
+document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+
+// --- ESP-NOW Status ---
+async function fetchCommsStatus() {
+    try {
+        const response = await fetch('/api/comms');
+        if (!response.ok) return;
+        const data = await response.json();
+
+        const connEl = document.getElementById('commsConn');
+        connEl.textContent = data.connection;
+        connEl.className = data.connection === 'CONNECTED' ? 'connected' : 'disconnected';
+
+        document.getElementById('commsLastRx').textContent = data.last_rx || '--';
+        document.getElementById('commsLastTx').textContent = data.last_tx || '--';
+        document.getElementById('commsLatency').textContent = data.latency_ms >= 0 ? `${data.latency_ms} ms` : '-- ms';
+        document.getElementById('commsStats').textContent = `${data.sent} / ${data.recv}`;
+        document.getElementById('commsFailed').textContent = data.failed;
+
+        // Update message history
+        const historyEl = document.getElementById('msgHistory');
+        if (data.history && data.history.length > 0) {
+            const roleNames = ['ATTACKER', 'DEFENDER'];
+            const stateNames = ['IDLE', 'SEARCH', 'APPROACH', 'DRIBBLE', 'SHOOT', 'DEFEND', 'REPOS', 'AVOID'];
+
+            let html = '';
+            for (let i = data.history.length - 1; i >= 0; i--) {
+                const msg = data.history[i];
+                const dir = msg.dir === 'tx' ? '→' : '←';
+                const text = msg.text ? `"${msg.text}"` : `${roleNames[msg.role]} ${stateNames[msg.state]} ball:${msg.ball}°`;
+                html += `<div class="msg-entry ${msg.dir}">
+                    <span class="msg-dir">${dir}</span>
+                    <span class="msg-data">${text}</span>
+                </div>`;
+            }
+            historyEl.innerHTML = html;
+        } else {
+            historyEl.innerHTML = '<div class="msg-entry">No messages yet</div>';
+        }
+    } catch (err) {
+        console.error("Comms fetch error:", err);
+    }
+}
+
+async function sendTestMessage() {
+    const btn = document.getElementById('sendTestBtn');
+    const status = document.getElementById('sendTestStatus');
+    const input = document.getElementById('testMsgInput');
+    const text = input.value.trim();
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    status.textContent = '';
+    status.className = 'save-status';
+
+    try {
+        const url = text ? `/api/comms/test?text=${encodeURIComponent(text)}` : '/api/comms/test';
+        const response = await fetch(url, { method: 'POST' });
+        const result = await response.json();
+
+        if (result.ok) {
+            status.textContent = 'Sent!';
+            status.className = 'save-status success';
+            if (text) input.value = '';
+        } else {
+            status.textContent = 'Failed';
+            status.className = 'save-status error';
+        }
+    } catch (err) {
+        status.textContent = 'Error';
+        status.className = 'save-status error';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Send';
+}
+
+document.getElementById('sendTestBtn').addEventListener('click', sendTestMessage);
+
+// Poll every 500ms
+setInterval(fetchCommsStatus, 500);
+
+// Initial fetch
+fetchSettings();
+fetchCommsStatus();

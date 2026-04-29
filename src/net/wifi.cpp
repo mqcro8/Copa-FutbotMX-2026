@@ -1,5 +1,7 @@
 #include "wifi.h"
 #include "debug_utils.h"
+#include "../settings/settings.h"
+#include <esp_wifi.h>
 
 namespace {
     WiFiConfig s_config;
@@ -9,6 +11,8 @@ namespace {
     WiFiMode s_current_mode = WiFiMode::AP_ONLY;
     uint32_t s_last_sta_check_ms = 0;
     uint8_t s_sta_retry_count = 0;
+    uint32_t s_sta_connect_start_ms = 0;
+    bool s_sta_connecting = false;
 }
 
 static void startAP() {
@@ -16,8 +20,16 @@ static void startAP() {
         WiFi.softAPdisconnect(true);
     }
 
+    WiFi.mode(WIFI_AP_STA);
+    delay(50);
+
+    String mac = WiFi.macAddress();
+    String last4 = mac.substring(mac.length() - 5);
+    last4.replace(":", "");
+    String ssid = "WIFI-" + last4;
+
     bool ok = WiFi.softAP(
-        s_config.ap_ssid,
+        ssid.c_str(),
         s_config.ap_password,
         s_config.ap_channel,
         s_config.ap_hidden,
@@ -29,39 +41,29 @@ static void startAP() {
         return;
     }
 
+    esp_wifi_set_promiscuous(true);
+    esp_wifi_set_channel(s_config.ap_channel, WIFI_SECOND_CHAN_NONE);
+    esp_wifi_set_promiscuous(false);
+
     WiFi.softAPsetHostname(s_config.ap_hostname);
     s_ap_started = true;
-    LOG("WIFI", "AP started: %s @ %s",
-        s_config.ap_ssid,
-        WiFi.softAPIP().toString().c_str());
+    LOG("WIFI", "AP started: %s @ %s (ch %d)",
+        ssid.c_str(),
+        WiFi.softAPIP().toString().c_str(),
+        WiFi.channel());
 }
 
-static bool connectSTA() {
+static void connectSTA() {
     if (strlen(s_config.sta_ssid) == 0) {
         LOG("WIFI", "No STA SSID configured");
         s_sta_retry_count = s_config.sta_retry_max; // Stop retrying immediately
-        return false;
+        return;
     }
 
+    LOG("WIFI", "Connecting to STA: %s", s_config.sta_ssid);
     WiFi.begin(s_config.sta_ssid, s_config.sta_password);
-
-    uint32_t start = millis();
-    while (millis() - start < s_config.connect_timeout_ms) {
-        if (WiFi.status() == WL_CONNECTED) {
-            s_sta_connected = true;
-            s_sta_retry_count = 0;
-            LOG("WIFI", "STA connected: %s @ %s",
-                s_config.sta_ssid,
-                WiFi.localIP().toString().c_str());
-            return true;
-        }
-        delay(100);
-    }
-
-    WiFi.disconnect(true);
-    s_sta_retry_count++;
-    LOG("WIFI", "STA connect timeout");
-    return false;
+    s_sta_connecting = true;
+    s_sta_connect_start_ms = millis();
 }
 
 void WiFiMgr::init(const WiFiConfig& config) {
@@ -105,25 +107,39 @@ void WiFiMgr::update() {
     if (s_current_mode == WiFiMode::AP_ONLY) return;
 
     uint32_t now = millis();
-    if (now - s_last_sta_check_ms < 2000) return;
+    if (now - s_last_sta_check_ms < 1000) return;
     s_last_sta_check_ms = now;
 
     wl_status_t status = WiFi.status();
     if (status == WL_CONNECTED) {
-        s_sta_connected = true;
-        s_sta_retry_count = 0;
+        if (!s_sta_connected) {
+            s_sta_connected = true;
+            s_sta_connecting = false;
+            s_sta_retry_count = 0;
+            LOG("WIFI", "STA connected: %s @ %s",
+                s_config.sta_ssid,
+                WiFi.localIP().toString().c_str());
+        }
     } else {
-        s_sta_connected = false;
-
-        if (status != WL_IDLE_STATUS && status != WL_DISCONNECTED) {
+        if (s_sta_connected) {
             LOG("WIFI", "STA disconnected (reason:%d)", (int)status);
+            s_sta_connected = false;
         }
 
-        if (s_sta_retry_count < s_config.sta_retry_max) {
-            connectSTA();
-        } else if (s_sta_retry_count == s_config.sta_retry_max) {
-            LOG("WIFI", "STA max retries reached");
-            s_sta_retry_count++;
+        if (s_sta_connecting) {
+            if (now - s_sta_connect_start_ms >= s_config.connect_timeout_ms) {
+                LOG("WIFI", "STA connect timeout");
+                WiFi.disconnect(true);
+                s_sta_connecting = false;
+                s_sta_retry_count++;
+            }
+        } else {
+            if (s_sta_retry_count < s_config.sta_retry_max) {
+                connectSTA();
+            } else if (s_sta_retry_count == s_config.sta_retry_max) {
+                LOG("WIFI", "STA max retries reached");
+                s_sta_retry_count++;
+            }
         }
     }
 }

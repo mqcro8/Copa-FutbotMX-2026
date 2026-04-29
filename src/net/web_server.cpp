@@ -4,6 +4,8 @@
 #include "../core/state.h"
 #include "../config/config.h"
 #include "../sensors/gyro.h"
+#include "../settings/settings.h"
+#include "../comms/comms.h"
 #include <LittleFS.h>
 
 namespace {
@@ -208,6 +210,178 @@ static void handleNotFound(AsyncWebServerRequest* request) {
     request->send(404, "application/json", "{\"error\":\"not_found\"}");
 }
 
+static void handleSettings(AsyncWebServerRequest* request) {
+    s_request_count++;
+
+    char json[256];
+    snprintf_P(json, sizeof(json),
+        PSTR("{\"own_mac\":\"%s\",\"peer_mac\":\"%s\",\"role\":%d}"),
+        Settings::getOwnMacStr().c_str(),
+        Settings::getPeerMacStr().c_str(),
+        (int)Settings::getRole()
+    );
+
+    AsyncWebServerResponse* resp = request->beginResponse(200, "application/json", json);
+    setCORS(resp);
+    request->send(resp);
+}
+
+static void handleSettingsPost(AsyncWebServerRequest* request) {
+    s_request_count++;
+
+    if (request->method() == HTTP_OPTIONS) {
+        AsyncWebServerResponse* resp = request->beginResponse(204);
+        setCORS(resp);
+        request->send(resp);
+        return;
+    }
+
+    if (request->method() != HTTP_POST) {
+        request->send(405, "application/json", "{\"error\":\"method_not_allowed\"}");
+        return;
+    }
+
+    bool success = false;
+    String message;
+
+    if (request->hasParam("peer_mac", true)) {
+        String macStr = request->getParam("peer_mac", true)->value();
+        if (macStr.length() == 17) {
+            uint8_t mac[6];
+            int a[6];
+            if (sscanf(macStr.c_str(), "%x:%x:%x:%x:%x:%x",
+                &a[0], &a[1], &a[2], &a[3], &a[4], &a[5]) == 6) {
+                for (int i = 0; i < 6; i++) mac[i] = (uint8_t)a[i];
+                Settings::setPeerMac(mac);
+                success = true;
+                message = "peer_mac updated";
+            } else {
+                message = "invalid MAC format";
+            }
+        } else {
+            message = "invalid MAC length";
+        }
+    }
+
+    if (request->hasParam("role", true)) {
+        String roleStr = request->getParam("role", true)->value();
+        uint8_t role = roleStr.toInt();
+        if (role <= 1) {
+            Settings::setRole(role);
+            success = true;
+            message = "role updated";
+        }
+    }
+
+    char json[128];
+    snprintf_P(json, sizeof(json),
+        PSTR("{\"success\":%s,\"message\":\"%s\"}"),
+        success ? "true" : "false",
+        message.c_str()
+    );
+
+    AsyncWebServerResponse* resp = request->beginResponse(200, "application/json", json);
+    setCORS(resp);
+    request->send(resp);
+}
+
+static void handleComms(AsyncWebServerRequest* request) {
+    s_request_count++;
+
+    const RobotMsg& lastRx = Comms::getLastMessage();
+    const CommsStats& stats = Comms::getStats();
+
+    char lastRxStr[32];
+    uint32_t rxTime = Comms::getLastRxTimeMs();
+    if (rxTime > 0) {
+        uint32_t ago = millis() - rxTime;
+        if (ago < 1000) {
+            snprintf(lastRxStr, sizeof(lastRxStr), "%ums ago", ago);
+        } else {
+            snprintf(lastRxStr, sizeof(lastRxStr), "%us ago", ago / 1000);
+        }
+    } else {
+        snprintf(lastRxStr, sizeof(lastRxStr), "none");
+    }
+
+    char lastTxStr[32];
+    if (stats.last_tx_ms > 0) {
+        uint32_t ago = millis() - stats.last_tx_ms;
+        if (ago < 1000) {
+            snprintf(lastTxStr, sizeof(lastTxStr), "%ums ago", ago);
+        } else {
+            snprintf(lastTxStr, sizeof(lastTxStr), "%us ago", ago / 1000);
+        }
+    } else {
+        snprintf(lastTxStr, sizeof(lastTxStr), "none");
+    }
+
+    const char* connStr = Comms::isConnected() ? "CONNECTED" : "DISCONNECTED";
+
+    CommsMsgEntry entries[10];
+    uint8_t entryCount = 0;
+    Comms::getMsgHistory(entries, entryCount);
+
+    char json[2048];
+    int len = snprintf_P(json, sizeof(json),
+        PSTR("{\"connection\":\"%s\",\"last_rx\":\"%s\",\"last_tx\":\"%s\","
+             "\"latency_ms\":%d,\"sent\":%lu,\"recv\":%lu,\"failed\":%lu,"
+             "\"peer_mac\":\"%s\",\"history\":["),
+        connStr, lastRxStr, lastTxStr,
+        (int)stats.last_latency_ms,
+        (unsigned long)stats.sent,
+        (unsigned long)stats.recv,
+        (unsigned long)stats.failed,
+        Settings::getPeerMacStr().c_str()
+    );
+
+    for (uint8_t i = 0; i < entryCount; i++) {
+        if (len >= sizeof(json) - 1) break;
+        len += snprintf(json + len, sizeof(json) - len,
+            "%s{\"ts\":%lu,\"dir\":\"%s\",\"role\":%d,\"state\":%d,\"ball\":%d,\"heading\":%d,\"text\":\"%s\"}",
+            i > 0 ? "," : "",
+            (unsigned long)entries[i].timestamp_ms,
+            entries[i].is_tx ? "tx" : "rx",
+            (int)entries[i].role,
+            (int)entries[i].state,
+            entries[i].ball_angle_deg,
+            entries[i].heading_deg,
+            entries[i].text
+        );
+    }
+
+    len += snprintf(json + len, sizeof(json) - len, "]}");
+
+    AsyncWebServerResponse* resp = request->beginResponse(200, "application/json", json);
+    setCORS(resp);
+    request->send(resp);
+}
+
+static void handleCommsTest(AsyncWebServerRequest* request) {
+    s_request_count++;
+
+    if (request->method() == HTTP_OPTIONS) {
+        AsyncWebServerResponse* resp = request->beginResponse(204);
+        setCORS(resp);
+        request->send(resp);
+        return;
+    }
+
+    String text = "";
+    if (request->hasParam("text", true)) {
+        text = request->getParam("text", true)->value();
+    }
+
+    Comms::sendTest(text.length() > 0 ? text.c_str() : nullptr);
+
+    char json[64];
+    snprintf_P(json, sizeof(json), PSTR("{\"ok\":true}"));
+
+    AsyncWebServerResponse* resp = request->beginResponse(200, "application/json", json);
+    setCORS(resp);
+    request->send(resp);
+}
+
 void WebSrv::init(const WebServerConfig& config) {
     s_config = config;
     s_state = WebServerState::STARTING;
@@ -230,6 +404,10 @@ void WebSrv::init(const WebServerConfig& config) {
     s_server->on("/api/status", HTTP_GET, handleStatus);
     s_server->on("/api/state", HTTP_GET, handleState);
     s_server->on("/api/telemetry", HTTP_GET, handleTelemetry);
+    s_server->on("/api/settings", HTTP_GET, handleSettings);
+    s_server->on("/api/settings", HTTP_POST, handleSettingsPost);
+    s_server->on("/api/comms", HTTP_GET, handleComms);
+    s_server->on("/api/comms/test", HTTP_POST, handleCommsTest);
     s_server->on("/api/command", HTTP_POST, handleCommand);
     
     // Catch-all for static files in the /data folder

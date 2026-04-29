@@ -115,6 +115,84 @@
             </div>
         </div>
 
+        <!-- ESP-NOW Settings Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">ESP-NOW Config</div>
+            </div>
+            <div>
+                <div class="data-row">
+                    <span class="data-label">Own MAC</span>
+                    <span class="data-value mono" id="ownMac">--:--:--:--:--:--</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Peer MAC</span>
+                    <span class="data-value mono" id="peerMac">--:--:--:--:--:--</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Role</span>
+                    <select id="roleSelect" class="role-select">
+                        <option value="0">ATTACKER</option>
+                        <option value="1">DEFENDER</option>
+                    </select>
+                </div>
+                <div class="data-row" style="margin-top: 12px;">
+                    <span class="data-label">New Peer MAC</span>
+                    <input type="text" id="newPeerMac" class="mac-input" placeholder="AA:BB:CC:DD:EE:FF" maxlength="17">
+                </div>
+                <button id="saveSettingsBtn" class="save-btn">Save Settings</button>
+                <span id="saveStatus" class="save-status"></span>
+            </div>
+        </div>
+
+        <!-- ESP-NOW Status Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">ESP-NOW Status</div>
+            </div>
+            <div>
+                <div class="data-row">
+                    <span class="data-label">Connection</span>
+                    <span class="data-value" id="commsConn">DISCONNECTED</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Last RX</span>
+                    <span class="data-value mono" id="commsLastRx">--</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Last TX</span>
+                    <span class="data-value mono" id="commsLastTx">--</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Latency</span>
+                    <span class="data-value mono" id="commsLatency">-- ms</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Sent / Recv</span>
+                    <span class="data-value mono" id="commsStats">0 / 0</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Failed</span>
+                    <span class="data-value mono" id="commsFailed">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ESP-NOW Messages Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">ESP-NOW Messages</div>
+            </div>
+            <div class="msg-history" id="msgHistory">
+                <div class="msg-entry">No messages yet</div>
+            </div>
+            <div class="msg-send">
+                <input type="text" id="testMsgInput" class="mac-input" placeholder="Test message text" maxlength="32">
+                <button id="sendTestBtn" class="send-btn">Send</button>
+                <span id="sendTestStatus" class="save-status"></span>
+            </div>
+        </div>
+
     </div>
 
     <script src="script.js"></script>
