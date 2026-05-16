@@ -21,7 +21,7 @@ Build two fully autonomous IR-soccer robots for **Copa FutBotMX 2026** (Ágil ca
 | TaskFactory | ✅ Done | Generic FreeRTOS pinned-task creator |
 | **Behavioral FSM** | **🟡 Skeleton** | `strategy.h/.cpp` — both `init()` and `update()` are empty shells |
 | **Main loop logic** | **🟡 Stub** | Currently direct reactive control (forward on center sensor, turn otherwise) — does NOT call strategy module or comms |
-| Physical chassis + wheels | 🔄 In progress | Not yet assembled |
+| Hardware | 🔄 In progress | Not yet fully assembled |
 
 ### Architecture summary
 
