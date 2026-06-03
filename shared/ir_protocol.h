@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 enum class RobotRole : uint8_t { ATTACKER = 0, DEFENDER = 1 };
-enum class RobotState : uint8_t { IDLE, SEARCH, APPROACH, DRIBBLE, SHOOT, DEFEND, REPOSITION, AVOID_PENALTY };
+enum class RobotState : uint8_t { IDLE, SEARCH, APPROACH, DRIBBLE, SHOOT, DEFEND, INTERCEPT, REPOSITION, AVOID_PENALTY };
 
 struct __attribute__((packed)) RobotMsg {
     RobotRole   role;

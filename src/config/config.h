@@ -1,7 +1,33 @@
 #pragma once
 #include <cstdint>
+#include "ir_protocol.h"
 
 constexpr uint8_t KILL_PIN = 0;
+
+// ─── Role (compile-time) ──────────────────────────────────────────────────
+constexpr RobotRole MY_ROLE = RobotRole::ATTACKER;
+
+// ─── Movement speeds ──────────────────────────────────────────────────────
+constexpr float FWD_SPEED = 0.7f;
+constexpr float ROT_SPEED = 0.5f;
+constexpr float ESCAPE_SPEED = 0.8f;
+
+// ─── Ball tracking thresholds ─────────────────────────────────────────────
+constexpr float BALL_ANGLE_THRESHOLD = 15.0f;
+constexpr uint8_t APPROACH_MIN_INTENSITY = 2;
+constexpr uint32_t BALL_LOST_TIMEOUT_MS = 150;
+constexpr uint32_t BALL_OFFCENTER_TIMEOUT_MS = 200;
+
+// ─── Field travel (prevents shoot at center line) ─────────────────────────
+constexpr uint32_t MIN_FIELD_TRAVEL_MS = 2000;
+
+// ─── Escape durations ─────────────────────────────────────────────────────
+constexpr uint32_t LINE_ESCAPE_MS = 300;
+constexpr uint32_t WALL_ESCAPE_MS = 500;
+constexpr int16_t WALL_IMPACT_THRESHOLD = 8000;
+
+// ─── Defender ─────────────────────────────────────────────────────────────
+constexpr float DEFENDER_BASE_CM = 40.0f;
 // Motores
 //  ─── Robot geometry
 //  ────────────────────────────────────────────────────────────

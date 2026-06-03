@@ -1,7 +1,8 @@
 #include "state.h"
+#include "config/config.h"
 
 namespace Core {
-    RobotRole role = RobotRole::ATTACKER;
+    RobotRole role = MY_ROLE;
     RobotState state = RobotState::IDLE;
     bool killed = false;
     int16_t current_heading = 0;
@@ -11,13 +12,18 @@ namespace Core {
     IRData irData = {};
     ColorSensorData colorData = {};
     GyroData gyroData = {};
+    RobotMsg peerMsg = {};
+    uint32_t lastPeerMsgMs = 0;
 
     void init() {
+        role = MY_ROLE;
         state = RobotState::IDLE;
         killed = false;
     }
 
     void update() {
+        ball_angle = irData.angle_deg;
+        ball_confidence = irData.intensity;
     }
 
     void updateIRData(const IRData& data) {

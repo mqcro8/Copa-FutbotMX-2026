@@ -16,6 +16,8 @@ namespace Core {
     extern IRData irData;
     extern ColorSensorData colorData;
     extern GyroData gyroData;
+    extern RobotMsg peerMsg;
+    extern uint32_t lastPeerMsgMs;
 
     void init();
     void update();

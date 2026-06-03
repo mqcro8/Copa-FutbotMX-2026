@@ -1,5 +1,6 @@
 #include "comms.h"
 #include "ir_protocol.h"
+#include "core/state.h"
 #include "debug_utils.h"
 #include <esp_now.h>
 #include <WiFi.h>
@@ -7,7 +8,7 @@
 namespace {
     RobotMsg lastMessage;
     bool connected = false;
-    uint8_t peerMac[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
+    uint8_t peerMac[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF}; // TODO: configure via utils/getMacAddress
 }
 
 void OnDataSent(const uint8_t*, esp_now_send_status_t status) {
@@ -42,12 +43,12 @@ void comms_init() {
 
 void comms_send() {
     RobotMsg msg;
-    msg.role = RobotRole::ATTACKER;
-    msg.state = RobotState::SEARCH;
-    msg.ball_angle_deg = 0;
-    msg.ball_confidence = 0;
-    msg.heading_deg = 0;
-    msg.crc = 0;
+    msg.role             = Core::role;
+    msg.state            = Core::state;
+    msg.ball_angle_deg   = Core::ball_angle;
+    msg.ball_confidence  = Core::ball_confidence;
+    msg.heading_deg      = (int16_t)Core::gyroData.yaw_deg;
+    msg.crc              = 0; // TODO: calcular CRC real
 
     esp_now_send(peerMac, (uint8_t*)&msg, sizeof(msg));
 }
