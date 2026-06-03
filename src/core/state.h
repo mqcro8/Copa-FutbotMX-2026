@@ -13,6 +13,9 @@ namespace Core {
     extern int16_t ball_angle;
     extern uint8_t ball_confidence;
     extern uint32_t last_heartbeat_ms;
+    extern uint32_t dribble_start_ms;
+    extern float home_heading_deg;
+    extern bool game_active;
     extern IRData irData;
     extern ColorSensorData colorData;
     extern GyroData gyroData;

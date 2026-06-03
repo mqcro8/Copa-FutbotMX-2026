@@ -60,6 +60,7 @@ static void handleState(AsyncWebServerRequest* request) {
         case RobotState::SHOOT:         stateStr = "SHOOT";       break;
         case RobotState::DEFEND:           stateStr = "DEFEND";        break;
         case RobotState::REPOSITION:        stateStr = "REPOSITION";   break;
+        case RobotState::INTERCEPT:         stateStr = "INTERCEPT";    break;
         case RobotState::AVOID_PENALTY:    stateStr = "AVOID_PENALTY"; break;
     }
 

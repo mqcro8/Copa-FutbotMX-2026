@@ -1,7 +1,32 @@
 #pragma once
 #include <cstdint>
+#include "ir_protocol.h"
 
 constexpr uint8_t KILL_PIN = 0;
+
+// Compile-time role: set ATTACKER on one robot, DEFENDER on the other.
+constexpr RobotRole MY_ROLE = RobotRole::ATTACKER;
+
+// Peer ESP-NOW MAC — configure with utils/getMacAddress.cpp on each board.
+constexpr uint8_t PEER_MAC[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+// ─── Algorithm motion parameters (Algorithm.md §9) ─────────────────────────
+constexpr float FWD_SPEED = 0.7f;
+constexpr float ROT_SPEED = 0.5f;
+constexpr float BALL_ANGLE_THRESHOLD = 15.0f;
+constexpr uint8_t APPROACH_MIN_INTENSITY = 2;
+constexpr uint32_t BALL_LOST_MS = 150;
+constexpr uint32_t BALL_OFFCENTER_MS = 200;
+constexpr float BALL_OFFCENTER_ANGLE = 30.0f;
+constexpr uint32_t MIN_FIELD_TRAVEL_MS = 2000;
+constexpr uint32_t LINE_ESCAPE_MS = 300;
+constexpr uint32_t WALL_ESCAPE_MS = 500;
+constexpr int16_t WALL_IMPACT_THRESHOLD = 8000;
+constexpr float DEFENDER_BASE_CM = 40.0f;
+constexpr uint32_t REPOSITION_ALIGN_MS = 500;
+constexpr uint32_t REPOSITION_MIN_MS = 1500;
+constexpr uint8_t DEFEND_INTERCEPT_INTENSITY = 3;
+constexpr float DEFEND_INTERCEPT_ANGLE = 45.0f;
 // Motores
 //  ─── Robot geometry
 //  ────────────────────────────────────────────────────────────
